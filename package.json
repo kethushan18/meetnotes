@@ -4,7 +4,7 @@
   "private": true,
   "description": "Chrome extension: record meetings in a Chrome tab, transcribe locally, tell voices apart, hand notes to Claude.",
   "type": "module",
-  "license": "UNLICENSED",
+  "license": "MIT",
   "scripts": {
     "build": "node build.mjs",
     "package": "node build.mjs && node scripts/package.mjs",

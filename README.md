@@ -75,3 +75,7 @@ The design borrows from these open-source projects, read for reference. No code 
 - [transformers.js examples](https://github.com/huggingface/transformers.js-examples): Moonshine, Silero and WebGPU setup.
 
 Third-party libraries and models are listed in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+
+## License
+
+MIT. See [LICENSE](LICENSE).
