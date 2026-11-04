@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MeetNotes settings</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="page">
+<main>
+  <h1>MeetNotes settings</h1>
+  <p class="muted">Audio is transcribed on your Mac and never uploaded.</p>
+
+  <section>
+    <h2>Basics</h2>
+    <label for="myName">Your name</label>
+    <input type="text" id="myName" placeholder="e.g. Alex">
+
+    <label for="defaultTemplateId">Default notes style</label>
+    <select id="defaultTemplateId"></select>
+
+    <label>Open notes in</label>
+    <label class="check"><input type="radio" name="openIn" value="app"> The Claude app</label>
+    <label class="check"><input type="radio" name="openIn" value="web"> Claude in the browser (claude.ai)</label>
+
+    <label class="check" style="margin-top:14px"><input type="checkbox" id="recordMic"> <span>Record my microphone (your own voice)</span></label>
+    <label class="check"><input type="checkbox" id="voiceNaming"> <span>Tell voices apart and ask me who is speaking</span></label>
+    <div style="margin-left:24px">
+      <label for="voiceMatch">Voice matching</label>
+      <select id="voiceMatch">
+        <option value="loose">Loose: fewer "new voice" questions (may mix similar voices)</option>
+        <option value="normal">Normal</option>
+        <option value="strict">Strict: separates similar voices (may ask twice for one person)</option>
+      </select>
+      <label class="check"><input type="checkbox" id="showVoiceScores"> Show the voice-match score next to each line (helps tune this setting)</label>
+    </div>
+
+    <div class="engine-line" id="engineLine"></div>
+    <button class="btn" id="btnSetup">Run setup again</button>
+  </section>
+
+  <details class="section">
+    <summary>Notes styles</summary>
+    <p class="hint">Each style is the instruction Claude follows. You can pick one before or after a meeting.</p>
+    <div id="templates"></div>
+    <button class="btn" id="btnAddTpl">Add style</button>
+    <button class="btn ghost" id="btnResetTpl">Restore defaults</button>
+  </details>
+
+  <details class="section">
+    <summary>Advanced</summary>
+
+    <h3>Claude API (fully automatic notes)</h3>
+    <label class="check"><input type="radio" name="notesEngine" value="claudeai"> <span>Use my Claude app or account (default, no API cost)</span></label>
+    <label class="check"><input type="radio" name="notesEngine" value="api"> <span>Use the Claude API: notes are written automatically when you stop (about US$0.05 per meeting hour)</span></label>
+    <div id="apiBlock" style="margin-left:24px">
+      <label for="apiKey">API key</label>
+      <div class="row">
+        <input type="password" id="apiKey" placeholder="sk-ant-..." autocomplete="off">
+        <button class="btn" id="btnTestKey" style="flex:none">Test key</button>
+      </div>
+      <div id="keyResult" class="small" style="margin-top:4px"></div>
+      <label for="model">Model</label>
+      <div class="row">
+        <select id="model"></select>
+        <input type="text" id="modelCustom" placeholder="or type a model ID" style="flex:0.8">
+      </div>
+      <label class="check"><input type="checkbox" id="autoGenerate"> Write notes automatically when recording stops</label>
+    </div>
+
+    <h3>Extra outputs</h3>
+    <label class="check"><input type="checkbox" id="out_slack"> <span>Ask Claude for a Slack-ready summary too</span></label>
+    <div style="margin-left:24px">
+      <label for="out_slackWebhook">Slack Incoming Webhook URL <span class="muted small">(optional, to post directly)</span></label>
+      <input type="url" id="out_slackWebhook" placeholder="https://hooks.slack.com/services/...">
+      <label class="check"><input type="checkbox" id="out_slackAutoPost"> Post automatically when notes are saved</label>
+    </div>
+    <label class="check"><input type="checkbox" id="out_markdown"> <span>"Download .md" button for saved notes</span></label>
+    <div style="margin-left:24px"><label class="check"><input type="checkbox" id="out_markdownAuto"> Download automatically to Downloads/MeetNotes</label></div>
+    <label class="check"><input type="checkbox" id="out_drive"> <span>Save transcripts to Google Drive (for Claude's Google Drive connector)</span></label>
+    <div style="margin-left:24px">
+      <label class="check"><input type="checkbox" id="out_driveAuto"> Save automatically when recording stops</label>
+      <label for="driveFolderId">Transcripts folder ID <span class="muted small">(optional)</span></label>
+      <input type="text" id="driveFolderId" placeholder="Empty = a &quot;MeetNotes Transcripts&quot; folder is created">
+    </div>
+    <label class="check"><input type="checkbox" id="out_gdoc"> <span>Google Doc of saved notes</span></label>
+    <div style="margin-left:24px">
+      <label for="gdocFolderId">Notes folder ID <span class="muted small">(optional)</span></label>
+      <input type="text" id="gdocFolderId">
+      <label class="check"><input type="checkbox" id="out_gdocAuto"> Create automatically when notes are saved</label>
+    </div>
+    <label class="check"><input type="checkbox" id="out_includeTranscript"> Include the transcript in .md files and Google Docs</label>
+    <label for="gdocClientId">Google OAuth client ID <span class="muted small">(needed for the Google options)</span></label>
+    <input type="text" id="gdocClientId" placeholder="1234-abc.apps.googleusercontent.com">
+    <div class="hint">Authorised redirect URI for the Google Cloud client: <code id="redirectUri"></code></div>
+
+    <h3>Speech engine</h3>
+    <label for="asrModel">Speech model</label>
+    <select id="asrModel">
+      <option value="onnx-community/moonshine-base-ONNX">Moonshine Base: fast, recommended</option>
+      <option value="onnx-community/moonshine-tiny-ONNX">Moonshine Tiny: fastest, less accurate</option>
+      <option value="onnx-community/whisper-base.en">Whisper Base (English)</option>
+      <option value="onnx-community/whisper-small.en">Whisper Small (English): most accurate, slowest</option>
+    </select>
+    <div class="hint">Changing this downloads the new model once, the next time you record.</div>
+    <div class="row">
+      <div><label for="maxChunkSec">Max chunk (seconds)</label><input type="number" id="maxChunkSec" min="4" max="29"></div>
+      <div><label for="silenceThreshold">Silence level</label><input type="number" id="silenceThreshold" step="0.001" min="0.001" max="0.1"></div>
+    </div>
+
+    <h3>Prompts</h3>
+    <label for="systemPrompt">Context for Claude</label>
+    <textarea id="systemPrompt" rows="7"></textarea>
+    <label for="slackPrompt">Slack summary rules</label>
+    <textarea id="slackPrompt" rows="7"></textarea>
+    <div class="row" style="margin-top:8px">
+      <div><label for="maxTokens">Max output tokens (API)</label><input type="number" id="maxTokens" min="500" max="32000" step="500"></div>
+      <div><label for="historyLimit">Meetings kept in history</label><input type="number" id="historyLimit" min="1" max="200"></div>
+    </div>
+    <div style="margin-top:12px"><button class="btn ghost" id="btnResetPrompts">Restore default prompts</button></div>
+  </details>
+</main>
+<div class="savebar">
+  <span id="saveState" class="small muted">All changes saved</span>
+  <button class="btn primary" id="btnSave">Save</button>
+</div>
+<div class="toast hidden" id="toast"></div>
+<script type="module" src="options.bundle.js"></script>
+</body>
+</html>

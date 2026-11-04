@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Set up MeetNotes</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="page setup">
+<main class="narrow">
+  <div class="setup-head">
+    <img src="icons/128.png" alt="">
+    <div>
+      <h1>Set up MeetNotes</h1>
+      <div class="muted small">About two minutes, once. Nothing to do after this.</div>
+    </div>
+  </div>
+  <ol class="stepper" id="stepper"></ol>
+
+  <!-- 1 -->
+  <section class="step" data-step="name">
+    <h2>What should we call you?</h2>
+    <p class="muted">Your own voice is labelled with this name in transcripts and action items.</p>
+    <input type="text" id="myName" placeholder="Your first name" autocomplete="given-name">
+    <div class="step-actions"><button class="btn primary" id="nameNext">Continue</button></div>
+  </section>
+
+  <!-- 2 -->
+  <section class="step" data-step="pin">
+    <h2>Pin MeetNotes to your toolbar</h2>
+    <p class="muted">You'll click this icon on your meeting tab to record. Chrome only allows recording a tab after that click.</p>
+    <ol class="howto">
+      <li>Click the puzzle icon at the top right of Chrome.</li>
+      <li>Click the pin next to <strong>MeetNotes</strong>.</li>
+    </ol>
+    <div class="check-line" id="pinState"><span class="tick"></span><span>Waiting for the pin...</span></div>
+    <p class="small muted">Shortcut you can also use on a meeting tab: <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>M</kbd></p>
+    <div class="step-actions"><button class="btn" id="pinSkip">Skip</button><button class="btn primary" id="pinNext" disabled>Continue</button></div>
+  </section>
+
+  <!-- 3 -->
+  <section class="step" data-step="mic">
+    <h2>Allow your microphone</h2>
+    <p class="muted">So your own voice is in the transcript. The meeting tab gives everyone else. Audio never leaves your Mac.</p>
+    <button class="btn primary" id="micAllow">Allow microphone</button>
+    <div class="meter hidden" id="micMeter"><div id="micLevel"></div></div>
+    <div class="check-line hidden" id="micState"><span class="tick"></span><span id="micText"></span></div>
+    <div class="step-actions"><button class="btn" id="micSkip">Don't record my mic</button><button class="btn primary" id="micNext" disabled>Continue</button></div>
+  </section>
+
+  <!-- 4 -->
+  <section class="step" data-step="model">
+    <h2>Download the speech engine</h2>
+    <p class="muted">One download of about 150 MB, kept in Chrome. It turns speech into text and tells voices apart, all on your Mac. You can continue while it downloads.</p>
+    <button class="btn primary hidden" id="modelGo">Download and test</button>
+    <div class="progress hidden" id="modelProg"><div id="modelBar"></div></div>
+    <div class="small muted" id="modelStatus"></div>
+    <div class="result hidden" id="modelResult"></div>
+    <div class="step-actions"><button class="btn primary" id="modelNext" disabled>Continue</button></div>
+  </section>
+
+  <!-- 5 -->
+  <section class="step" data-step="claude">
+    <h2>Connect the Claude app</h2>
+    <p class="muted">After a meeting, "Open in Claude" starts a new chat in your Claude app with the transcript ready to send.</p>
+    <button class="btn primary" id="claudeTest">Open the Claude app</button>
+    <p class="small">If Chrome asks <em>"Open Claude?"</em>, tick <strong>Always allow</strong> and click <strong>Open</strong>.</p>
+    <div class="row" style="margin-top:6px">
+      <button class="btn" id="claudeOk" disabled>It opened</button>
+      <button class="btn ghost" id="claudeWeb">I use Claude in the browser</button>
+    </div>
+    <div class="check-line hidden" id="claudeState"><span class="tick"></span><span id="claudeText"></span></div>
+    <div class="step-actions"><button class="btn primary" id="claudeNext" disabled>Continue</button></div>
+  </section>
+
+  <!-- 6 -->
+  <section class="step" data-step="done">
+    <h2>You're all set</h2>
+    <ol class="howto">
+      <li>Join your meeting in a Chrome tab (Sevv, Meet, Zoom web).</li>
+      <li>Click the <strong>MeetNotes icon</strong>. The panel shows <span class="pill ready">Ready</span>.</li>
+      <li>Add who's there (optional) and press <strong>Start recording</strong>.</li>
+      <li>When a new voice speaks, tap their name once.</li>
+      <li>Press <strong>Stop</strong>, then <strong>Open in Claude</strong>.</li>
+    </ol>
+    <p class="small muted">Change anything later in Settings. API key, Google Drive and Slack options are under Advanced.</p>
+    <div class="step-actions"><button class="btn primary" id="finish">Finish</button></div>
+  </section>
+</main>
+<script type="module" src="setup.bundle.js"></script>
+</body>
+</html>

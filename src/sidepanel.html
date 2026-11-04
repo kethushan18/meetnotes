@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MeetNotes</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="panel">
+  <header class="topbar">
+    <div class="brand"><img src="icons/32.png" alt="">MeetNotes</div>
+    <button class="btn ghost small-btn" id="btnHistory">History</button>
+    <button class="btn ghost small-btn" id="btnSettings">Settings</button>
+  </header>
+
+  <div class="content" id="content">
+    <div id="bannerError" class="banner err hidden"></div>
+
+    <!-- Name a voice (during the meeting for new voices, or afterwards to rename) -->
+    <div class="card ask hidden" id="askCard">
+        <div class="ask-title" id="askTitle">Who is speaking?</div>
+        <div class="ask-quote" id="askQuote"></div>
+        <div class="chips" id="askChips"></div>
+        <div class="row ask-row">
+          <input type="text" id="askName" placeholder="Type a name">
+          <button class="btn primary" id="askSave" style="flex:none">Save</button>
+          <button class="btn ghost" id="askSkip" style="flex:none">Later</button>
+        </div>
+        <div class="small muted" id="askMore"></div>
+        <button class="linkbtn small hidden" id="askAlt"></button>
+      </div>
+
+
+    <!-- Setup not finished -->
+    <section id="viewSetup" class="hidden">
+      <div class="hero">
+        <img src="icons/128.png" alt="" class="hero-icon">
+        <h2>Two-minute setup first</h2>
+        <p class="muted">Allow the microphone, download the speech model once and connect the Claude app.</p>
+        <button class="btn primary block" id="btnOpenSetup">Start setup</button>
+      </div>
+    </section>
+
+    <!-- Waiting for the icon click on a meeting tab -->
+    <section id="viewIdle" class="hidden">
+      <div class="hero">
+        <img src="icons/128.png" alt="" class="hero-icon">
+        <h2>Ready when you are</h2>
+        <ol class="big-steps">
+          <li>Open your meeting tab (Sevv, Meet, Zoom web)</li>
+          <li>Click the <strong>MeetNotes icon</strong> in the toolbar, or press <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>M</kbd></li>
+        </ol>
+        <div id="idleWarn" class="small warn hidden"></div>
+      </div>
+    </section>
+
+    <!-- Tab captured, fill details and start -->
+    <section id="viewReady" class="hidden">
+      <div class="card">
+        <div class="tabtarget"><img id="tabIcon" alt=""><span class="t" id="tabTitle"></span><span class="pill ready">Ready</span></div>
+
+        <label for="inTitle">Title</label>
+        <input type="text" id="inTitle">
+
+        <label for="inAttendees">Who's in the meeting? <span class="muted small">(optional)</span></label>
+        <input type="text" id="inAttendees" placeholder="Names, separated by commas">
+        <div class="chips" id="recentChips"></div>
+
+        <label for="inTemplate">Notes style</label>
+        <select id="inTemplate"></select>
+
+        <button class="btn primary block start" id="btnStart">Start recording</button>
+        <div class="small muted center" id="engineIdle"></div>
+      </div>
+    </section>
+
+    <!-- Recording -->
+    <section id="viewRecording" class="hidden">
+      <div class="card recbar-card">
+        <div class="recbar">
+          <span class="dot"></span>
+          <span class="timer" id="timer">00:00</span>
+          <span class="pill" id="micPill"></span>
+          <span style="flex:1"></span>
+          <button class="btn danger" id="btnStop">Stop</button>
+        </div>
+        <div class="levels" id="levels">
+          <span>Meeting</span><div class="lv"><div id="lvTab"></div></div>
+          <span>You</span><div class="lv"><div id="lvMe"></div></div>
+        </div>
+        <div class="status" id="engineStatus"></div>
+        <div class="small warn hidden" id="silentWarn">No sound is coming from the meeting tab. Check the meeting audio is playing in that tab.</div>
+      </div>
+
+      <div class="transcript" id="liveTranscript"></div>
+    </section>
+
+    <!-- Finished -->
+    <section id="viewDone" class="hidden">
+      <div class="card">
+        <div class="done-title" id="doneTitle"></div>
+        <div class="small muted" id="doneMeta"></div>
+        <div class="status" id="finishingStatus"></div>
+        <div class="chips speakers" id="speakerChips"></div>
+
+        <div class="row" style="margin-top:12px">
+          <select id="doneTemplate" aria-label="Notes style"></select>
+        </div>
+        <button class="btn primary block start" id="btnOpenClaude">Open in Claude</button>
+        <button class="btn primary block start" id="btnGenerate">Write notes</button>
+        <div class="small muted center" id="openHint"></div>
+
+        <button class="linkbtn small" id="btnShowPaste">Keep Claude's notes here</button>
+        <div id="pasteBox" class="hidden" style="margin-top:8px">
+          <textarea id="pasteArea" rows="4" placeholder="In Claude, click Copy under the reply. Then click here and press Cmd+V. It saves by itself."></textarea>
+        </div>
+      </div>
+
+      <div class="tabs" role="tablist" id="doneTabs">
+        <button data-tab="notes" class="active">Notes</button>
+        <button data-tab="slack" id="tabBtnSlack">Slack</button>
+        <button data-tab="transcript">Transcript</button>
+      </div>
+      <div id="tabNotes"><div class="md" id="notesOut"></div></div>
+      <div id="tabSlack" class="hidden"><pre class="slack" id="slackOut"></pre></div>
+      <div id="tabTranscript" class="hidden"><div class="transcript" id="doneTranscript"></div></div>
+    </section>
+
+    <!-- History -->
+    <section id="viewHistory" class="hidden">
+      <div class="row" style="margin-bottom:10px">
+        <strong>Past meetings</strong>
+        <button class="btn" id="btnBackFromHistory" style="flex:none">Back</button>
+      </div>
+      <div id="historyList"></div>
+    </section>
+  </div>
+
+  <footer class="actions hidden" id="doneActions">
+    <button class="btn" id="btnCopyNotes">Copy notes</button>
+    <button class="btn" id="btnCopySlack">Copy Slack</button>
+    <button class="btn" id="btnDownload">Download .md</button>
+    <button class="btn" id="btnPostSlack">Post to Slack</button>
+    <button class="btn" id="btnGdoc">Google Doc</button>
+    <button class="btn" id="btnDrive">Transcript to Drive</button>
+    <span style="flex:1"></span>
+    <button class="btn" id="btnNew">New meeting</button>
+  </footer>
+</div>
+<div class="toast hidden" id="toast"></div>
+<script type="module" src="sidepanel.bundle.js"></script>
+</body>
+</html>
