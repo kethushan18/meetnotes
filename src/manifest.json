@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "MeetNotes for Claude",
   "short_name": "MeetNotes",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "description": "Record meetings in any Chrome tab (Sevv, Meet, Zoom web), transcribe them on your Mac, tell voices apart, and hand the notes to Claude.",
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAxXd4HQDz3N1DjcIqBZPgCbPUGvdS3Z+1eqiQjONkXmCVwlKCoSrNvooVJzVPz5AJiL8Fq+y+7ZcLOYLcEwYZwVgSL3jBlODZDrU1Z1hLc/auavXz0S0KZh/4PI6/9J3HPdB50LKp1kdh1SM31yvDwhwjYWX1RHB/s0SEuLRgf05pKSLFnP1s8McHsd0PwUolpC9laZM6pqzajRDSi4uFyeE+3C77bQI7Eg5B9/KQG/4q13antveOGvc6HL7DWolJrIICf0Hhy6g8zjF2Wa1zMKgOZywr/dzmDeC3lza20o6q+tMT9MDoQ8ESoC+c1VVqTbzNK8pMCqmnP43hLC5zpQIDAQAB",
   "minimum_chrome_version": "116",

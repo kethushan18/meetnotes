@@ -111,6 +111,7 @@ export const DEFAULTS = {
   engineReady: null,         // { model, device, speedX, at } written by setup
   recentNames: [],
   showVoiceScores: false,    // show the voice-match score next to each line (for tuning)
+  lastPeopleCount: 0,        // remembered for the next meeting
 
   // Output destinations
   autoGenerate: true,        // write notes as soon as recording stops

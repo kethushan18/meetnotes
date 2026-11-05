@@ -60,7 +60,7 @@ await sp.evaluate(async () => {
   await chrome.storage.session.set({ engine: { ready: true, device: 'webgpu', micStatus: 'on', status: 'Listening (GPU)' } });
   await chrome.storage.local.set({ session: { id: 'm_r', title: 'HR weekly sync', attendees: 'Sam, Priya', startedAt: Date.now() - 95000, status: 'recording', templateId: 'general',
     segments: [ { t: 1000, dur: 3000, spk: 's1', text: 'Morning all, shall we start with hiring?' }, { t: 5000, dur: 3000, spk: 'me', text: 'Yes, three finalists for support.' } ],
-    speakers: { s1: { label: 'Speaker 1', name: '', sample: 'Morning all, shall we start with hiring?', askedAt: 1 } } } });
+    speakers: { s1: { label: 'Speaker 1', name: '', ask: true, sample: 'Morning all, shall we start with hiring?', askedAt: 1 } } } });
 });
 await sp.waitForTimeout(400);
 log('ASK card visible:', await sp.isVisible('#askCard'), '|', await sp.textContent('#askTitle'), '|', await sp.textContent('#askQuote'));
@@ -72,7 +72,7 @@ log('named s1 ->', s.speakers.s1.name, '| ask visible:', await sp.isVisible('#as
 await sp.evaluate(async () => {
   const { session } = await chrome.storage.local.get('session');
   session.segments.push({ t: 9000, dur: 3000, spk: 's2', text: 'And the budget is approved.' });
-  session.speakers.s2 = { label: 'Speaker 2', name: '', sample: 'And the budget is approved.', askedAt: 2 };
+  session.speakers.s2 = { label: 'Speaker 2', name: '', ask: true, sample: 'And the budget is approved.', askedAt: 2 };
   await chrome.storage.local.set({ session });
 });
 await sp.waitForTimeout(300);

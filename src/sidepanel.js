@@ -33,6 +33,8 @@ const ui = {
   skipped: new Set(), // speakers the user chose to name later
   renaming: null, // speaker id being renamed after the meeting
   lineFix: null, // { t, text, spk } a single line being reassigned
+  people: 0, // "how many people" on the Ready card
+  peopleTouched: false,
   timer: null,
   activeTab: null
 };
@@ -107,9 +109,10 @@ function transcriptHtml(item) {
 }
 
 // ---------- speakers ----------
+// Voices the engine is confident about (heard enough of) and nobody has named yet.
 function pendingSpeakers(item) {
   return Object.entries(item?.speakers || {})
-    .filter(([id, sp]) => !sp.name && !ui.skipped.has(id))
+    .filter(([id, sp]) => sp.ask && !sp.name && !ui.skipped.has(id))
     .sort((a, b) => (a[1].askedAt || 0) - (b[1].askedAt || 0));
 }
 function nameOptions(item) {
@@ -203,7 +206,13 @@ function renderAsk(item, view) {
     card.dataset.id = id;
     $('askName').value = rename ? sp.name || '' : '';
   }
-  $('askTitle').textContent = rename ? `Who is ${sp.name || sp.label}?` : 'New voice. Who is speaking?';
+  const total = Number(item.peopleCount) ? Number(item.peopleCount) - (ui.engine.micStatus === 'on' ? 1 : 0) : 0;
+  const named = Object.values(item.speakers || {}).filter((x) => x.name).length;
+  $('askTitle').textContent = rename
+    ? `Who is ${sp.name || sp.label}?`
+    : total
+      ? `Who is this? (voice ${Math.min(named + 1, total)} of ${total})`
+      : 'Who is this?';
   const sample = sp.sample || '';
   $('askQuote').textContent = sample ? `"${sample.slice(0, 110)}${sample.length > 110 ? '...' : ''}"` : '';
   $('askChips').innerHTML = nameOptions(item)
@@ -292,6 +301,12 @@ function renderReady() {
     .slice(0, 8)
     .map((n) => `<button class="chip" data-add="${esc(n)}">+ ${esc(n)}</button>`)
     .join('');
+  // People count: names typed + you, unless set by hand; otherwise last meeting's count.
+  if (!ui.peopleTouched) {
+    const typedCount = names($('inAttendees').value).length;
+    ui.people = typedCount ? typedCount + 1 : ui.people || ui.settings.lastPeopleCount || 2;
+  }
+  $('cntVal').textContent = ui.people;
   $('engineIdle').innerHTML = engineLine();
 }
 
@@ -302,6 +317,7 @@ function renderRecording(item) {
   $('engineStatus').innerHTML = status;
   const mic = e.micStatus;
   $('micPill').textContent = mic === 'on' ? 'Mic on' : mic === 'off' ? 'Mic off' : mic === 'denied' ? 'Mic blocked' : '';
+  $('recCountVal').textContent = item.peopleCount ? `${item.peopleCount} people` : 'People?';
   show('micPill', !!$('micPill').textContent);
 
   // Live levels, and a warning if the meeting tab stays silent (catches capture problems early).
@@ -587,7 +603,15 @@ $('btnStart').onclick = async () => {
   $('btnStart').disabled = true;
   $('btnStart').textContent = 'Starting...';
   try {
-    const res = await send({ type: 'start', tabId, title: $('inTitle').value.trim(), attendees: $('inAttendees').value.trim(), templateId: $('inTemplate').value });
+    const res = await send({
+      type: 'start',
+      tabId,
+      title: $('inTitle').value.trim(),
+      attendees: $('inAttendees').value.trim(),
+      templateId: $('inTemplate').value,
+      peopleCount: ui.people
+    });
+    ui.peopleTouched = false;
     if (!res?.ok) throw new Error(res?.error || 'Could not start recording');
     $('inTitle').dataset.touched = '';
     $('inAttendees').value = '';
@@ -600,6 +624,22 @@ $('btnStart').onclick = async () => {
   }
 };
 $('btnStop').onclick = () => send({ type: 'stop' });
+
+// How many people: on the Ready card, and adjustable while recording.
+const setPeople = (d) => {
+  ui.people = Math.max(1, Math.min(20, (ui.people || 2) + d));
+  ui.peopleTouched = true;
+  renderReady();
+};
+$('cntMinus').onclick = () => setPeople(-1);
+$('cntPlus').onclick = () => setPeople(1);
+const setRecPeople = (d) => {
+  const item = currentItem();
+  const n = Math.max(1, Math.min(20, (Number(item?.peopleCount) || 2) + d));
+  send({ type: 'set-count', count: n });
+};
+$('recMinus').onclick = () => setRecPeople(-1);
+$('recPlus').onclick = () => setRecPeople(1);
 
 // Naming voices while recording
 const answer = (name) => (ui.lineFix ? fixLine(name) : nameSpeaker($('askCard').dataset.id, name));

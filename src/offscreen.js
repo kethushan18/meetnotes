@@ -17,7 +17,9 @@ function getWorker() {
   worker.onmessage = (e) => {
     const m = e.data;
     if (m.type === 'engine') engine(m.state);
-    else if (m.type === 'segment') toBg('segment', { segment: m.segment, newSpeaker: m.newSpeaker });
+    else if (m.type === 'segment') toBg('segment', { segment: m.segment });
+    else if (m.type === 'voice-ready') toBg('voice-ready', { id: m.id, sample: m.sample });
+    else if (m.type === 'relabel') toBg('relabel', { merges: m.merges, map: m.map });
     else if (m.type === 'stopped') toBg('stopped');
   };
   worker.onerror = (e) => engine({ error: 'Speech engine crashed: ' + (e.message || 'unknown error') });
@@ -108,7 +110,7 @@ async function start({ streamId, settings: cfg }) {
   }
 
   const w = getWorker();
-  w.postMessage({ type: 'start', cfg });
+  w.postMessage({ type: 'start', cfg: { ...cfg, micOn: !!micStream } });
 
   const ctx = new AudioContext({ sampleRate: 16000, latencyHint: 'interactive' });
   await ctx.audioWorklet.addModule(chrome.runtime.getURL('recorder-worklet.js'));
@@ -160,6 +162,14 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
       return;
     case 'teach':
       worker?.postMessage({ type: 'teach', t: msg.t, id: msg.id });
+      sendResponse({ ok: true });
+      return;
+    case 'named':
+      worker?.postMessage({ type: 'named', id: msg.id, name: msg.name });
+      sendResponse({ ok: true });
+      return;
+    case 'set-count':
+      worker?.postMessage({ type: 'set-count', count: msg.count });
       sendResponse({ ok: true });
       return;
     case 'disarm':

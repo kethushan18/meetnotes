@@ -67,6 +67,14 @@
         <input type="text" id="inAttendees" placeholder="Names, separated by commas">
         <div class="chips" id="recentChips"></div>
 
+        <label>How many people, including you?</label>
+        <div class="stepper-row">
+          <button class="btn icon" id="cntMinus" aria-label="Fewer people">−</button>
+          <span class="count" id="cntVal">2</span>
+          <button class="btn icon" id="cntPlus" aria-label="More people">+</button>
+          <span class="small muted" id="cntHint">Stops MeetNotes from counting the same person twice.</span>
+        </div>
+
         <label for="inTemplate">Notes style</label>
         <select id="inTemplate"></select>
 
@@ -82,6 +90,9 @@
           <span class="dot"></span>
           <span class="timer" id="timer">00:00</span>
           <span class="pill" id="micPill"></span>
+          <span class="pill people" id="recCount" title="People in the meeting, including you">
+            <button class="mini" id="recMinus" aria-label="Fewer people">−</button><span id="recCountVal"></span><button class="mini" id="recPlus" aria-label="More people">+</button>
+          </span>
           <span style="flex:1"></span>
           <button class="btn danger" id="btnStop">Stop</button>
         </div>

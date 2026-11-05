@@ -1,6 +1,7 @@
 // Service worker: owns the recording session state and the offscreen audio engine.
 import { getSettings } from './lib/settings.js';
 import { assignLine } from './lib/lines.js';
+import { applyRelabel, ensureSpeakers, tidySpeakers } from './lib/speakerstate.js';
 
 const OFFSCREEN_URL = 'offscreen.html';
 const MENU_ID = 'meetnotes-record';
@@ -97,6 +98,9 @@ function engineConfig(s) {
     silenceThreshold: s.silenceThreshold
   };
 }
+const toOffscreen = async (msg) => {
+  if (await hasOffscreen()) await chrome.runtime.sendMessage({ target: 'offscreen', ...msg }).catch(() => {});
+};
 
 // ---------- offscreen engine ----------
 async function hasOffscreen() {
@@ -200,7 +204,7 @@ async function archiveSession(session) {
 }
 
 // ---------- recording ----------
-async function startRecording({ tabId, title, attendees, templateId }) {
+async function startRecording({ tabId, title, attendees, templateId, peopleCount }) {
   const existing = await getSession();
   if (isBusy(existing)) throw new Error('A recording is already running.');
   await archiveSession(existing);
@@ -227,10 +231,10 @@ async function startRecording({ tabId, title, attendees, templateId }) {
 
   // Remember names for the "who is speaking" buttons next time.
   const names = (attendees || '').split(',').map((n) => n.trim()).filter(Boolean);
-  if (names.length) {
+  {
     const recent = [...new Set([...names, ...(settings.recentNames || [])])].slice(0, 20);
     const { settings: raw = {} } = await chrome.storage.local.get('settings');
-    await chrome.storage.local.set({ settings: { ...raw, recentNames: recent } });
+    await chrome.storage.local.set({ settings: { ...raw, recentNames: recent, lastPeopleCount: Number(peopleCount) || raw.lastPeopleCount || 0 } });
   }
 
   const startedAt = Date.now();
@@ -242,6 +246,7 @@ async function startRecording({ tabId, title, attendees, templateId }) {
     tabId,
     attendees: attendees || '',
     templateId: templateId || settings.defaultTemplateId,
+    peopleCount: Number(peopleCount) || 0,
     startedAt,
     endedAt: null,
     status: 'recording',
@@ -256,7 +261,13 @@ async function startRecording({ tabId, title, attendees, templateId }) {
   await setEngine({ queue: 0, error: '', micStatus: 'pending', heard: false, levels: null });
 
   try {
-    await sendToOffscreen({ target: 'offscreen', type: 'start', streamId, startedAt, settings: engineConfig(settings) });
+    await sendToOffscreen({
+      target: 'offscreen',
+      type: 'start',
+      streamId,
+      startedAt,
+      settings: { ...engineConfig(settings), peopleCount: Number(peopleCount) || 0 }
+    });
   } catch (e) {
     await setSession({ status: 'stopped', endedAt: Date.now(), error: e.message });
     scheduleIdleClose();
@@ -303,14 +314,29 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         await queueWrite(async () => {
           const s = await getSession();
           if (!s) return;
-          const speakers = { ...(s.speakers || {}) };
-          if (msg.newSpeaker && !speakers[msg.newSpeaker.id]) {
-            const n = Object.keys(speakers).length + 1;
-            speakers[msg.newSpeaker.id] = { label: `Speaker ${n}`, name: '', sample: msg.newSpeaker.sample, askedAt: Date.now() };
-          }
           const segments = [...(s.segments || []), msg.segment].sort((a, b) => a.t - b.t);
+          const speakers = tidySpeakers(ensureSpeakers(s.speakers || {}, [msg.segment]), segments);
           await setSession({ segments, speakers });
         });
+        return { ok: true };
+      case 'voice-ready': // heard enough of a new voice to be sure: now ask who it is
+        await queueWrite(async () => {
+          const s = await getSession();
+          if (!s?.speakers?.[msg.id] || s.speakers[msg.id].name) return;
+          const speakers = { ...s.speakers, [msg.id]: { ...s.speakers[msg.id], ask: true, askedAt: Date.now(), sample: msg.sample || s.speakers[msg.id].sample } };
+          await setSession({ speakers });
+        });
+        return { ok: true };
+      case 'relabel': // the engine merged voices or re-sorted lines
+        await queueWrite(async () => {
+          const s = await getSession();
+          if (!s) return;
+          await setSession(applyRelabel(s, msg));
+        });
+        return { ok: true };
+      case 'set-count': // the user changed how many people are in the meeting
+        await queueWrite(async () => setSession({ peopleCount: Number(msg.count) || 0 }));
+        await toOffscreen({ type: 'set-count', count: Number(msg.count) || 0 });
         return { ok: true };
       case 'line-speaker': {
         // One line was said by someone else: fix it, and teach that voice for the rest of the meeting.
@@ -323,8 +349,10 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
           id = r.id;
           await setSession({ speakers: r.speakers, segments: r.segments });
         });
-        if (id && id !== 'me' && (await hasOffscreen()))
-          await chrome.runtime.sendMessage({ target: 'offscreen', type: 'teach', t: msg.t, id }).catch(() => {});
+        if (id && id !== 'me') {
+          await toOffscreen({ type: 'teach', t: msg.t, id });
+          await toOffscreen({ type: 'named', id, name: msg.name });
+        }
         return { ok: true };
       }
       case 'name-speaker': {
@@ -345,8 +373,8 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
           }
           await setSession({ speakers, segments });
         });
-        if (mergedInto && (await hasOffscreen()))
-          await chrome.runtime.sendMessage({ target: 'offscreen', type: 'merge', from: msg.id, into: mergedInto }).catch(() => {});
+        if (mergedInto) await toOffscreen({ type: 'merge', from: msg.id, into: mergedInto });
+        else await toOffscreen({ type: 'named', id: msg.id, name: msg.name });
         return { ok: true };
       }
       case 'engine':

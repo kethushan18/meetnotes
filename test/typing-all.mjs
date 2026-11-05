@@ -18,7 +18,7 @@ results.push('Enter moves to next step: ' + (await setup.evaluate(() => document
 await sw.evaluate(async () => { const { settings } = await chrome.storage.local.get('settings'); await chrome.storage.local.set({ settings: { ...settings, setupDone: true } }); await chrome.storage.session.set({ armed: { tabId: 1, title: 'Room | Sevv', url: 'https://x.sevv.io', at: 1 } }); });
 const sp = await ctx.newPage(); await sp.goto(`chrome-extension://${ID}/sidepanel.html`); await sp.waitForTimeout(500);
 await typeCheck(sp, '#inTitle', 'Weekly sync'); await typeCheck(sp, '#inAttendees', 'Sam, Priya');
-await sp.evaluate(async () => { await chrome.storage.session.remove('armed'); await chrome.storage.local.set({ session: { id: 'm', title: 'T', startedAt: Date.now(), status: 'recording', segments: [{ t: 1, spk: 's1', text: 'hi there team' }], speakers: { s1: { label: 'Speaker 1', name: '', sample: 'hi there team', askedAt: 1 } } } }); });
+await sp.evaluate(async () => { await chrome.storage.session.remove('armed'); await chrome.storage.local.set({ session: { id: 'm', title: 'T', startedAt: Date.now(), status: 'recording', segments: [{ t: 1, spk: 's1', text: 'hi there team' }], speakers: { s1: { label: 'Speaker 1', name: '', ask: true, sample: 'hi there team', askedAt: 1 } } } }); });
 await sp.waitForTimeout(500);
 await typeCheck(sp, '#askName', 'Jordan');
 await sp.keyboard.press('Enter'); await sp.waitForTimeout(500);

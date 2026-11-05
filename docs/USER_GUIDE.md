@@ -19,10 +19,10 @@ If you're updating from an older version, reload the extension in `chrome://exte
 
 1. Join the meeting in a Chrome tab.
 2. Click the **MeetNotes icon** (or press **Alt+Shift+M**). The panel shows **Ready**.
-3. Optional: add who's there (tap recent names), then press **Start recording**.
-4. When a new voice speaks, MeetNotes asks **"Who is speaking?"**. Tap their name once and it labels that voice for the rest of the meeting. Picking a name that's already in use merges the two voices. You can also tap **Later** and name voices after the meeting.
-   - **Wrong name on a line?** Tap the line and pick who really said it. MeetNotes fixes that line and learns the voice, so their later lines follow.
-   - When two people talk in quick succession, MeetNotes detects the change of speaker inside the clip (pyannote) and splits it, so each part gets its own name.
+3. Add who's there (tap recent names) and check **How many people, including you?**. It fills in from the names you add. Then press **Start recording**.
+4. MeetNotes asks **"Who is this?"** only once it has heard enough of a voice to be sure it's a different person, so short "yeah"s and "this is good"s don't trigger questions. Tap their name once. With the people count set, it never makes more voices than people, and you can change the count with − / + while recording.
+   - **Wrong name on a line?** Tap the line and pick who really said it. That line stays fixed, and MeetNotes learns the voice.
+   - When you press **Stop**, MeetNotes re-sorts every line against the settled voices, so early or short lines that went to the wrong voice get the right name.
 5. Press **Stop**, then **Open in Claude**. A new chat opens in the Claude app with the transcript and your notes style. Press Enter.
 6. Optional: to keep the notes in MeetNotes (for the .md, Slack and Google Doc buttons), click **Keep Claude's notes here**, copy Claude's reply, click the box and press Cmd+V. It saves by itself.
 
